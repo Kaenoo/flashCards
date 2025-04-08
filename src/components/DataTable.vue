@@ -1,5 +1,4 @@
 <template>
-  <h1 class="text-center">FlashCards</h1>
   <h4 class="text-center">Modifiez les clés-valeurs que vous souhaitez réviser !</h4>
     
   <table>
