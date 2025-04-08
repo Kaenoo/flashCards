@@ -59,17 +59,20 @@
       v-if="listKeysValues.length > 0" 
       v-text="returnCards ? listKeysValues[currentIndex].key : listKeysValues[currentIndex].value"></h4>
   </div>
-  <div class="flex justify-center gap-10 pt-5">
+  <div class="flex justify-center gap-10 pt-5 pb-8">
     <button @click="prevCard" :disabled="currentIndex === 0">Retour</button>
     <button @click="nextCard" :disabled="currentIndex >= listKeysValues.length - 1">Suivant</button>
   </div>
-  
-  <button @click="returnHome">Revenir au Menu</button>
+  <div class="flex justify-center">
+    <button  @click="returnHome">Revenir au Menu</button>
+  </div>
 </div>
 
 <DataTable v-if="modifyData === true" v-model="listKeysValues" v-model:modify="modifyData"/>
 
 </template>
+
+<!-- ******************************** SCRIPT PART ******************************** -->
 
 <script setup>
 import { computed, ref } from 'vue';

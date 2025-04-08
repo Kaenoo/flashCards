@@ -14,7 +14,12 @@
       <td>
         <input type="text" v-model="item.value">
       </td>
-    </tr>
+      <div class="flex align-baseline mt-2 ml-4">
+        <button @click="deleteItem(item)">
+          <img class="size-12 sm:size-6" src="../assets/delete.png" alt="">
+        </button>
+      </div>
+      </tr>
   </table>
   
   <div class="flex justify-center m-10 gap-5">
@@ -49,6 +54,10 @@ const saveChanges = () => {
   originalData.value = JSON.parse(JSON.stringify(modelValue.value))
   modify.value = false
   hasChanged.value = false
+}
+
+const deleteItem = (itemDelete) => {
+  modelValue.value = modelValue.value.filter(item => item !== itemDelete);
 }
 
 </script>
