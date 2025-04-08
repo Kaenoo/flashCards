@@ -4,79 +4,59 @@
     <h1 class="text-center">FlashCards</h1>
     <h4 class="text-center">Entrez les clés-valeurs que vous souhaitez réviser !</h4>
 
-  <form action="" @submit.prevent>
-      <div class="flex justify-center gap-5 mb-5">
-        <button @click="selectedMode = 'json_md'">JSON ou Tableau Markdown</button>
-        <button @click="selectedMode = 'manual'">Manuellement</button>
-      </div>
+    <form action="" @submit.prevent>
+        <div class="flex justify-center gap-5 mb-5">
+          <button @click="selectedMode = 'json_md'">JSON ou Tableau Markdown</button>
+          <button @click="selectedMode = 'manual'">Manuellement</button>
+        </div>
 
-      <!-- Entrée Json ou Markdown -->
-      <div v-if="selectedMode === 'json_md'">
-        <textarea v-model="jsonMdInput">{{ jsonMdInput }}</textarea>
-        <button :disabled="jsonMdInput.length === 0" @click="verifyPattern(jsonMdInput)">Enregistrer</button>
-          <span
-              v-show="listKeysValues.length > 0"
-              class="ml-5">
-               Nombre de cartes : {{ listKeysValues.length }}
-            </span>
-            <div class="flex justify-center m-10 gap-5">
-              <button v-show="listKeysValues.length > 0" @click="modifyData = true">Modifier</button>
-              <button v-show="listKeysValues.length > 0" @click="startGame">Commencer</button>
-            </div>
-      </div>
+        <!-- Entrée Json ou Markdown -->
+        <div v-if="selectedMode === 'json_md'">
+          <textarea v-model="jsonMdInput">{{ jsonMdInput }}</textarea>
+          <button :disabled="jsonMdInput.length === 0" @click="verifyPattern(jsonMdInput)">Enregistrer</button>
+            <span
+                v-show="listKeysValues.length > 0"
+                class="ml-5">
+                Nombre de cartes : {{ listKeysValues.length }}
+              </span>
+        </div>
       
       <!-- Entrée Manuel -->
-      <div v-else>
-        <form action="" @submit.prevent>
-          <input type="text" v-model="keyName" placeholder="Clé">
-          <input type="text" v-model="valueName" placeholder="Valeur">
-          <div class="inline-block align-middle gap 5">
-            <button :disabled="!keyName || !valueName" class="mr-10" @click="addKeyValue">Ajouter</button> 
-            <span
-              v-show="listKeysValues.length > 0"
-              class="ml-5">
-               Nombre de cartes : {{ listKeysValues.length }}
-            </span>
-          </div>
-        </form>
+        <div v-else>
+          <form action="" @submit.prevent>
+            <input type="text" v-model="keyName" placeholder="Clé">
+            <input type="text" v-model="valueName" placeholder="Valeur">
+            <div class="inline-block align-middle gap 5">
+              <button :disabled="!keyName || !valueName" class="mr-10" @click="addKeyValue">Ajouter</button> 
+              <span
+                v-show="listKeysValues.length > 0"
+                class="ml-5">
+                Nombre de cartes : {{ listKeysValues.length }}
+              </span>
+            </div>
+          </form>
+        </div>
+
         <div class="flex justify-center m-10 gap-5">
           <button v-show="listKeysValues.length > 0" @click="modifyData = true">Modifier</button>
           <button v-show="listKeysValues.length > 0" @click="startGame">Commencer</button>
         </div>
-      </div>
-
     </form>
   </div>
   
-  <div v-show="gameStarted">
-    <h1 class="text-center">Jeu de FlashCards</h1>
-    <p class="text-center">Nombre de cartes : {{ listKeysValues.length }}</p>
-    <div 
-    class="m-auto flex items-center justify-center size-80 rounded-3xl bg-amber-300 shadow-2xl shadow-amber-100"
-    @click="returnCards = !returnCards">
-    <h4 
-      class="text-center px-4" 
-      v-if="listKeysValues.length > 0" 
-      v-text="returnCards ? listKeysValues[currentIndex].key : listKeysValues[currentIndex].value"></h4>
+  <div v-if="gameStarted">
+    <GameFlashCards v-model="listKeysValues" v-model:returnHome="gameStarted"/>
   </div>
-  <div class="flex justify-center gap-10 pt-5 pb-8">
-    <button @click="prevCard" :disabled="currentIndex === 0">Retour</button>
-    <button @click="nextCard" :disabled="currentIndex >= listKeysValues.length - 1">Suivant</button>
-  </div>
-  <div class="flex justify-center">
-    <button  @click="returnHome">Revenir au Menu</button>
-  </div>
-</div>
 
-<DataTable v-if="modifyData === true" v-model="listKeysValues" v-model:modify="modifyData"/>
+  <DataTable v-if="modifyData === true" v-model="listKeysValues" v-model:modify="modifyData"/>
 
 </template>
 
 <!-- ******************************** SCRIPT PART ******************************** -->
 
 <script setup>
-import { computed, ref } from 'vue';
-import DataTable from './components/DataTable.vue';
+import { computed, ref } from 'vue'
+import DataTable from './components/DataTable.vue'
 import GameFlashCards from './components/GameFlashCards.vue'
 
 const selectedMode = ref('json_md')
