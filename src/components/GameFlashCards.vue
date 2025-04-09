@@ -3,7 +3,7 @@
     
     <div class="flex flex-col gap-5 mt-10 mx-8 lg:mx-60 xl:mx-72 2xl:mx-96">
       <button @click="selectMode = 'simple'">Simple</button>
-      <button  @click="selectMode = 'disorder'">Désordre</button>
+      <button  @click="disorderCards">Désordre</button>
       <!-- <button>Intelligent</button> -->
     </div>
   </div>
@@ -36,7 +36,7 @@
   </div>
   
   <div class="flex justify-center pt-8">
-    <button @click="goHome = 'home'">Revenir au Menu</button>
+    <button @click="goHome">Revenir au Menu</button>
   </div>
 
 </template>
@@ -46,11 +46,18 @@
 <script setup>
 import { ref } from 'vue'
 const listKeysValues = defineModel({ type: Array})
-const goHome = defineModel('returnHome')
+const tempKeyValueArray = ref([])
+const home = defineModel('returnHome')
 
 const selectMode = ref('null')
 const returnCards = ref(false)
 const currentIndex = ref(0)
+
+const goHome = () => {
+  selectMode.value === 'disorder' ? listKeysValues.value = tempKeyValueArray.value : null
+  selectMode.value = 'null'
+  home.value = 'home'
+}
 
 const InvertCards = () => {
   listKeysValues.value.forEach(element => {
@@ -58,6 +65,14 @@ const InvertCards = () => {
     element.key = element.value
     element.value = tempkey
   });
+}
+
+const disorderCards = () => {
+  selectMode.value = 'disorder'
+  tempKeyValueArray.value = [...listKeysValues.value]
+  listKeysValues.value = listKeysValues.value
+    .slice()
+    .sort(() => Math.random() - 0.5)
 }
 
 const nextCard = () => {
