@@ -1,47 +1,46 @@
 <template>
-  
-  <div v-if="modifyData === false">
-    <h4 class="text-center">Entrez les clés-valeurs que vous souhaitez réviser !</h4>
-      
-    <form action="" @submit.prevent>
-        <div class="flex justify-center gap-5 mb-5">
-            <button @click="selectedMode = 'json_md'">JSON ou Tableau Markdown</button>
-            <button @click="selectedMode = 'manual'">Manuellement</button>
-        </div>
+    <div v-if="modifyData === false">
+        <h4 class="text-center">Entrez les clés-valeurs que vous souhaitez réviser !</h4>
         
-        <!-- Entrée Json ou Markdown -->
-        <div v-if="selectedMode === 'json_md'">
-            <textarea v-model="jsonMdInput">{{ jsonMdInput }}</textarea>
-            <button :disabled="jsonMdInput.length === 0" @click="verifyPattern(jsonMdInput)">Enregistrer</button>
-            <span
-            v-show="listKeysValues.length > 0"
-            class="ml-5">
-            Nombre de cartes : {{ listKeysValues.length }}
-            </span>
-        </div>
+        <form action="" @submit.prevent>
+            <div class="flex justify-center gap-5 mb-5">
+                <button @click="selectedMode = 'json_md'">JSON ou Tableau Markdown</button>
+                <button @click="selectedMode = 'manual'">Manuellement</button>
+            </div>
+            
+            <!-- Entrée Json ou Markdown -->
+            <div v-if="selectedMode === 'json_md'">
+                <textarea v-model="jsonMdInput">{{ jsonMdInput }}</textarea>
+                <button :disabled="jsonMdInput.length === 0" @click="verifyPattern(jsonMdInput)">Enregistrer</button>
+                <span
+                v-show="listKeysValues.length > 0"
+                class="ml-5">
+                Nombre de cartes : {{ listKeysValues.length }}
+                </span>
+            </div>
+            
+            <!-- Entrée Manuel -->
+            <div v-else>
+                <form action="" @submit.prevent>
+                    <input type="text" v-model="keyName" placeholder="Clé">
+                    <input type="text" v-model="valueName" placeholder="Valeur">
+                    <div class="inline-block align-middle gap 5">
+                        <button :disabled="!keyName || !valueName" class="mr-10" @click="addKeyValue">Ajouter</button> 
+                        <span
+                            v-show="listKeysValues.length > 0"
+                            class="ml-5">
+                            Nombre de cartes : {{ listKeysValues.length }}
+                        </span>
+                    </div>
+                </form>
+            </div>
         
-        <!-- Entrée Manuel -->
-        <div v-else>
-            <form action="" @submit.prevent>
-                <input type="text" v-model="keyName" placeholder="Clé">
-                <input type="text" v-model="valueName" placeholder="Valeur">
-                <div class="inline-block align-middle gap 5">
-                    <button :disabled="!keyName || !valueName" class="mr-10" @click="addKeyValue">Ajouter</button> 
-                    <span
-                    v-show="listKeysValues.length > 0"
-                    class="ml-5">
-                    Nombre de cartes : {{ listKeysValues.length }}
-                    </span>
-                </div>
-            </form>
-        </div>
-    
-        <div class="flex justify-center m-10 gap-5">
-            <button @click="goHome = 'home'">Revenir au Menu</button>
-            <button v-show="listKeysValues.length > 0" @click="modifyData = true">Modifier</button>
-        </div>
-    </form>
-  </div>
+            <div class="flex justify-center m-10 gap-5">
+                <button @click="goHome = 'home'">Revenir au Menu</button>
+                <button v-show="listKeysValues.length > 0" @click="modifyData = true">Modifier</button>
+            </div>
+        </form>
+    </div>
   <DataTable v-if="modifyData" v-model="listKeysValues" v-model:modify="modifyData"/>
 
 </template>

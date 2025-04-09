@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "npm run build && git add -f dist && git commit -m 'build: mise à jour dist' && git push origin --delete gh-pages && git subtree push --prefix dist origin gh-pages"
+    "deploy": "npm run build && git add -f dist && git commit -m \"mise à jour dist\" && git push origin --delete gh-pages && git subtree push --prefix dist origin gh-pages"
   },
   "dependencies": {
     "vue": "^3.5.13"

@@ -15,7 +15,7 @@
       </td>
       <div class="flex align-baseline mt-2 ml-4">
         <button @click="deleteItem(item)">
-          <img class="size-12 sm:size-6" src="../assets/delete.png" alt="">
+          <img class="size-16 sm:size-6" src="../assets/delete.png" alt="">
         </button>
       </div>
       </tr>
@@ -27,8 +27,10 @@
   </div>
 </template>
 
+<!-- ******************************** SCRIPT PART ******************************** -->
+
 <script setup>
-import { ref, watch, toRaw } from 'vue'
+import { ref, watch } from 'vue'
 const modelValue = defineModel({ type: Array})
 const modify = defineModel('modify')
 
@@ -38,6 +40,7 @@ const hasChanged = ref(false)
 
 const verifyChangeInData = () => hasChanged.value
 
+//S'il clique sur annuler, annule les changements s'il y en a eu
 const resetChanges = () => {
   modelValue.value = JSON.parse(JSON.stringify(originalData.value))
   modify.value = false

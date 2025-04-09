@@ -9,7 +9,17 @@
   </div>
 
   <div v-else>
-    <p class="text-center">Nombre de cartes : {{ listKeysValues.length }}</p>
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex-1">
+        <!-- Slot gauche vide ou autre chose -->
+      </div>
+      <p class="text-center flex-1">Nombre de cartes : {{ listKeysValues.length }}</p>
+      <div class="flex-1 flex justify-end ">
+        <img
+          @click="InvertCards" 
+          class="size-11 rounded active:scale-110 active:bg-amber-200 mr-2 lg:mr-60 xl:mr-80 2xl:mr-96" src="../assets/return.svg" alt="">
+      </div>
+    </div>
     <div 
       class="m-auto flex items-center justify-center size-80 rounded-3xl bg-amber-300 shadow-2xl shadow-amber-100"
       @click="returnCards = !returnCards">
@@ -31,6 +41,8 @@
 
 </template>
 
+<!-- ******************************** SCRIPT PART ******************************** -->
+
 <script setup>
 import { ref } from 'vue'
 const listKeysValues = defineModel({ type: Array})
@@ -39,6 +51,14 @@ const goHome = defineModel('returnHome')
 const selectMode = ref('null')
 const returnCards = ref(false)
 const currentIndex = ref(0)
+
+const InvertCards = () => {
+  listKeysValues.value.forEach(element => {
+    const tempkey = element.key
+    element.key = element.value
+    element.value = tempkey
+  });
+}
 
 const nextCard = () => {
   if (currentIndex.value < listKeysValues.value.length - 1) {
