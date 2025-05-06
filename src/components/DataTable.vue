@@ -6,32 +6,33 @@
     <h4 class="text-center">Modifiez les clés-valeurs que vous souhaitez réviser !</h4>
     
     <table>
-      <tr data-theme="dark">
-        <th >Clés</th>
-        <th>Valeurs</th>
-        <th>Supprimer 
-          <span class="ml-2"><input @click="gestConfirmDelete = 'show'" type="checkbox">
-          </span>
-        </th>
-        
-        <div class="">
-        </div>
-      </tr>
-      <tr v-for="item in modelValue">
-        <td>
-          <input type="text" v-model="item.key">
-        </td>
-        <td>
-          <input type="text" v-model="item.value">
-        </td>
-        <td>
-          <div class="flex justify-center align-middle">
-            <button @click="deleteItem(item)">
-              <img class="size-16 sm:size-6" :src="imgDelete" alt="">
-            </button>
-          </div>
-        </td>
-      </tr>
+      <thead>
+        <tr data-theme="dark">
+          <th >Clés</th>
+          <th>Valeurs</th>
+          <th>Supprimer 
+            <span class="ml-2"><input @click="gestConfirmDelete = 'show'" type="checkbox">
+            </span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="item in modelValue">
+          <td>
+            <input type="text" v-model="item.key">
+          </td>
+          <td>
+            <input type="text" v-model="item.value">
+          </td>
+          <td>
+            <div class="flex justify-center align-middle">
+              <button @click="deleteItem(item)">
+                <img class="size-16 sm:size-6" :src="imgDelete" alt="">
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
     </table>
     
     <div class="flex justify-center m-10 gap-5">
@@ -48,13 +49,13 @@ import { ref, watch } from 'vue'
 import imgDelete from '../assets/delete.png'
 import ConfirmDelete from './ConfirmDelete.vue'
 
-const gestConfirmDelete = ref('no')
 const modelValue = defineModel({ type: Array})
 const modify = defineModel('modify')
 
 const originalData = ref(JSON.parse(JSON.stringify(modelValue.value)))
 
 const hasChanged = ref(false)
+const gestConfirmDelete = ref('no')
 
 const verifyChangeInData = () => hasChanged.value
 

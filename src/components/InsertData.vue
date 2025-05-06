@@ -41,7 +41,8 @@
             </div>
         </form>
     </div>
-  <DataTable v-if="modifyData" v-model="listKeysValues" v-model:modify="modifyData"/>
+  
+    <DataTable v-else v-model="listKeysValues" v-model:modify="modifyData"/>
 
 </template>
 
