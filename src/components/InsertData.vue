@@ -38,6 +38,8 @@
             <div class="flex justify-center m-10 gap-5">
                 <button @click="goHome = 'home'">Revenir au Menu</button>
                 <button v-show="listKeysValues.length > 0" @click="modifyData = true">Modifier</button>
+                <button v-show="listKeysValues.length > 0" @click="exportData('json')">Exporter JSON</button>
+                <button v-show="listKeysValues.length > 0" @click="exportData('markdown')">Exporter Markdown</button>
             </div>
         </form>
     </div>
@@ -63,6 +65,7 @@ const keyName = ref('')
 const valueName = ref('')
 
 const modifyData = ref(false)
+const showExportModal = ref(false)
 
 /**
  * Ajoute une clé-valeur depuis l'onglet manuel
@@ -128,6 +131,68 @@ const verifyPattern = (e) => {
         }
     }
   }
+  const generateJson = () => {
+    const jsonObject = listKeysValues.value.reduce((acc, current) => {
+        acc[current.key] = current.value;
+        return acc;
+    }, {});
+    // Utiliser 2 espaces pour une indentation lisible
+    return JSON.stringify(jsonObject, null, 2); 
+};
+
+/**
+ * Génère le contenu Markdown (tableau) à partir de listKeysValues
+ * @returns {string} Le contenu Markdown
+ */
+const generateMarkdown = () => {
+    let markdown = "| Clé | Valeur |\n";
+    markdown += "| --- | --- |\n"; // Ligne de séparation pour le tableau Markdown
+    
+    listKeysValues.value.forEach(item => {
+        // Remplacer les nouvelles lignes par des espaces pour éviter de casser le tableau
+        const key = item.key; 
+        const value = item.value;
+        markdown += `| ${key} | ${value} |\n`;
+    });
+    
+    return markdown;
+};
+
+/**
+ * Déclenche le téléchargement du contenu exporté
+ * @param {string} format 'json' ou 'markdown'
+ */
+const exportData = (format) => {
+    if (listKeysValues.value.length === 0) {
+        alert("Aucune donnée à exporter.");
+        return;
+    }
+
+    let content, filename, mimeType;
+
+    if (format === 'json') {
+        content = generateJson();
+        filename = 'export_cles_valeurs.json';
+        mimeType = 'application/json';
+    } else if (format === 'markdown') {
+        content = generateMarkdown();
+        filename = 'export_cles_valeurs.md';
+        mimeType = 'text/markdown';
+    } else {
+        return; 
+    }
+
+    // Créer un élément <a> temporaire pour le téléchargement
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url); // Libérer l'objet URL
+};
 </script>
 
 <style>
