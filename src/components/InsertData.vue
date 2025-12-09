@@ -52,7 +52,7 @@
 import { computed, ref } from 'vue'
 import DataTable from './DataTable.vue'
 const goHome = defineModel('returnHome')
-const listKeysValues = defineModel({type: Array})
+let listKeysValues = defineModel({type: Array})
 
 const selectedMode = ref('json_md')
 
