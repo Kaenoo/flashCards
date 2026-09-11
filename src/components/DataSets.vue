@@ -15,19 +15,18 @@
       <div
         v-for="set in sets"
         :key="set.id"
-        class="flex items-center justify-between gap-3 border rounded-xl p-3">
+        class="flex items-center gap-3 border rounded-xl p-3">
         <div class="flex-1 min-w-0">
-          <strong class="break-words">{{ set.name }}</strong>
-          <span class="ml-2 text-neutral-500">{{ set.cards.length }} carte{{ set.cards.length > 1 ? 's' : '' }}</span>
+          <strong class="block break-words">{{ set.name }}</strong>
+          <span class="text-neutral-500">{{ set.cards.length }} carte{{ set.cards.length > 1 ? 's' : '' }}</span>
         </div>
-        <div class="flex items-center gap-2">
-          <button @click="editSet(set.id)">Modifier</button>
-          <button v-if="pendingDeleteId !== set.id" @click="pendingDeleteId = set.id">Supprimer</button>
-          <template v-else>
-            <span class="text-red-600 text-sm font-bold">Tout supprimer ?</span>
-            <button @click="confirmDelete(set.id)">Oui</button>
-            <button @click="pendingDeleteId = null">Non</button>
-          </template>
+        <div class="flex items-center gap-2 shrink-0">
+          <button class="p-1" title="Modifier" @click="editSet(set.id)">
+            <img class="size-6 hover:scale-110 transition duration-100" :src="imgEdit" alt="Modifier">
+          </button>
+          <button class="p-1" title="Supprimer" @click="pendingDeleteId = set.id">
+            <img class="size-6 hover:scale-110 transition duration-100" :src="imgTrash" alt="Supprimer">
+          </button>
         </div>
       </div>
     </div>
@@ -41,6 +40,19 @@
     <h4 class="text-center break-words">{{ editingSet?.name }}</h4>
     <InsertData v-model="currentSetCards" @back="view = 'list'"/>
   </div>
+
+  <Teleport to="body">
+    <div v-if="pendingDeleteId !== null" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="pendingDeleteId = null">
+      <div class="rounded-2xl bg-white p-6 text-center shadow-2xl">
+        <h4 class="mb-4 break-words">Supprimer le jeu « {{ pendingDelete?.name }} » ?</h4>
+        <p class="mb-6 text-neutral-600">Toutes ses cartes seront également supprimées.</p>
+        <div class="flex justify-center gap-6">
+          <button @click="pendingDeleteId = null">Annuler</button>
+          <button class="bg-red-600 text-white" @click="confirmDelete">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <!-- ******************************** SCRIPT PART ******************************** -->
@@ -48,6 +60,8 @@
 <script setup>
 import { computed, ref } from 'vue'
 import InsertData from './InsertData.vue'
+import imgEdit from '../assets/edit.svg'
+import imgTrash from '../assets/trash.svg'
 
 const sets = defineModel({ type: Array })
 const returnHome = defineModel('returnHome')
@@ -60,6 +74,8 @@ const pendingDeleteId = ref(null)
 const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
 
 const editingSet = computed(() => sets.value.find(s => s.id === editingSetId.value))
+
+const pendingDelete = computed(() => sets.value.find(s => s.id === pendingDeleteId.value))
 
 const currentSetCards = computed({
   get: () => editingSet.value?.cards ?? [],
@@ -81,7 +97,9 @@ const editSet = (id) => {
   view.value = 'editor'
 }
 
-const confirmDelete = (id) => {
+const confirmDelete = () => {
+  const id = pendingDeleteId.value
+  if (id === null) return
   sets.value = sets.value.filter(s => s.id !== id)
   pendingDeleteId.value = null
   if (editingSetId.value === id) {
