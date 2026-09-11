@@ -1,57 +1,56 @@
 <template>
+  <!--
   <div v-if="showArrow" @click="scrollToBottom" class="fixed size-12 md:size-10 bg-white rounded-4xl bottom-5 right-5 cursor-pointer transition duration-200 hover:scale-110">
-    <img src="../assets/arrow_down.png" alt="Bottom page">
+    <img src="../assets/arrow_down.png" alt="Bas de page">
   </div>
+  -->
 
-  <div v-if="gestConfirmDelete === 'show'">
-    <ConfirmDelete v-model:confirmDelete="gestConfirmDelete"/>
+  <h4 class="text-center">Modifiez les clés-valeurs que vous souhaitez réviser !</h4>
+
+  <table>
+    <thead>
+      <tr data-theme="dark">
+        <th>Clés</th>
+        <th>Valeurs</th>
+        <th>Supprimer</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="item in modelValue" :key="item">
+        <td>
+          <input type="text" v-model="item.key">
+        </td>
+        <td>
+          <input type="text" v-model="item.value">
+        </td>
+        <td>
+          <div class="flex justify-center align-middle">
+            <button type="button" @click="deleteItem(item)">
+              <img class="size-7 sm:size-6 hover:scale-110 transition duration-100" :src="imgDelete" alt="Supprimer">
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="flex justify-center m-10 gap-5">
+    <button @click="resetChanges">Annuler</button>
+    <button :disabled="!verifyChangeInData()" @click="saveChanges">Sauvegarder</button>
+    <button v-if="modelValue.length > 0 && confirmDeleteAll === false" @click="confirmDeleteAll = true">Supprimer tout</button>
+    <template v-if="confirmDeleteAll === true">
+      <span class="self-center text-red-600 font-bold">Tout supprimer ?</span>
+      <button @click="deleteAll">Oui</button>
+      <button @click="confirmDeleteAll = false">Non</button>
+    </template>
   </div>
-  <div v-else>
-    <h4 class="text-center">Modifiez les clés-valeurs que vous souhaitez réviser !</h4>
-    
-    <table>
-      <thead>
-        <tr data-theme="dark">
-          <th >Clés</th>
-          <th>Valeurs</th>
-          <th>Supprimer 
-            <span class="ml-2"><input @click="gestConfirmDelete = 'show'" type="checkbox">
-            </span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="item in modelValue">
-          <td>
-            <input type="text" v-model="item.key">
-          </td>
-          <td>
-            <input type="text" v-model="item.value">
-          </td>
-          <td>
-            <div class="flex justify-center align-middle">
-              <button @click="deleteItem(item)">
-                <img class="size-7 sm:size-6 hover:scale-110 transition duration-100" :src="imgDelete" alt="">
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    
-    <div class="flex justify-center m-10 gap-5">
-      <button @click="resetChanges">Annuler</button>
-      <button :disabled="!verifyChangeInData()" @click="saveChanges">Sauvegarder</button>
-    </div>
-  </div>
-  </template>
+</template>
 
 <!-- ******************************** SCRIPT PART ******************************** -->
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import imgDelete from '../assets/delete.png'
-import ConfirmDelete from './ConfirmDelete.vue'
 
 const modelValue = defineModel({ type: Array})
 const modify = defineModel('modify')
@@ -59,7 +58,7 @@ const modify = defineModel('modify')
 const originalData = ref(JSON.parse(JSON.stringify(modelValue.value)))
 
 const hasChanged = ref(false)
-const gestConfirmDelete = ref('no')
+const confirmDeleteAll = ref(false)
 
 const showArrow = ref(false)  // Variable pour afficher la flèche
 
@@ -93,6 +92,7 @@ const resetChanges = () => {
   modelValue.value = JSON.parse(JSON.stringify(originalData.value))
   modify.value = false
   hasChanged.value = false
+  confirmDeleteAll.value = false
 }
 
 // Surveille modelValue pour détecter tout changement
@@ -100,21 +100,19 @@ watch(modelValue, (newVal) => {
   hasChanged.value = JSON.stringify(newVal) !== JSON.stringify(originalData.value)
 }, { deep: true })
 
-watch(gestConfirmDelete, (val) => {
-  if (val === 'yes') {
-    modelValue.value = []
-    modify.value = false
-  }
-})
-
 const saveChanges = () => {
   originalData.value = JSON.parse(JSON.stringify(modelValue.value))
   modify.value = false
   hasChanged.value = false
+  confirmDeleteAll.value = false
 }
 
 const deleteItem = (itemDelete) => {
-  modelValue.value = modelValue.value.filter(item => item !== itemDelete);
+  modelValue.value = modelValue.value.filter(item => item !== itemDelete)
 }
 
+const deleteAll = () => {
+  modelValue.value = []
+  modify.value = false
+}
 </script>
