@@ -38,24 +38,35 @@
     <div class="flex flex-wrap items-center justify-center gap-3 border-t border-neutral-200 px-6 py-4 dark:border-neutral-800">
       <button class="btn btn-outline" @click="resetChanges">Annuler</button>
       <button class="btn btn-primary" :disabled="!verifyChangeInData()" @click="saveChanges">Sauvegarder</button>
-      <template v-if="confirmDeleteAll === false && modelValue.length > 0">
-        <span class="mx-1 hidden text-neutral-300 sm:inline dark:text-neutral-600">•</span>
-        <button class="btn btn-danger" @click="confirmDeleteAll = true">Supprimer tout</button>
-      </template>
-      <template v-else-if="confirmDeleteAll === true">
-        <span class="text-sm font-bold text-red-600">Tout supprimer ?</span>
-        <button class="btn btn-danger" @click="deleteAll">Oui</button>
-        <button class="btn btn-outline" @click="confirmDeleteAll = false">Non</button>
-      </template>
+      <button v-if="modelValue.length > 0" class="btn btn-danger" @click="confirmDeleteAll = true">Tout supprimer</button>
     </div>
   </div>
+
+  <Teleport to="body">
+    <div v-if="confirmDeleteAll" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="confirmDeleteAll = false">
+      <div class="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl dark:bg-neutral-900">
+        <h4 class="mb-2 text-lg font-bold text-neutral-900 dark:text-neutral-100">Tout supprimer ?</h4>
+        <p class="mb-6 text-neutral-600 dark:text-neutral-300">
+          Les <span class="font-bold">{{ modelValue.length }}</span> carte{{ modelValue.length > 1 ? 's' : '' }} de ce jeu
+          seront supprimée{{ modelValue.length > 1 ? 's' : '' }} définitivement.
+        </p>
+        <div class="flex justify-center gap-3">
+          <button class="btn btn-outline" @click="confirmDeleteAll = false">Annuler</button>
+          <button class="btn btn-danger" @click="deleteAll">Tout supprimer</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <!-- ******************************** SCRIPT PART ******************************** -->
 
 <script setup>
 import { ref, watch } from 'vue'
+import { useToast } from '../composables/useToast'
 import imgDelete from '../assets/delete.png'
+
+const { toast } = useToast()
 
 const modelValue = defineModel({ type: Array})
 const modify = defineModel('modify')
@@ -92,8 +103,10 @@ const deleteItem = (itemDelete) => {
 }
 
 const deleteAll = () => {
+  const count = modelValue.value.length
   modelValue.value = []
   confirmDeleteAll.value = false
   modify.value = false
+  toast(`${count} carte${count > 1 ? 's' : ''} supprimée${count > 1 ? 's' : ''}`, 'success')
 }
 </script>
