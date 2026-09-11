@@ -1,54 +1,70 @@
 <template>
-  <div v-if="view === 'list'">
-    <h4 class="text-center">Gérez vos jeux de données</h4>
+  <div v-if="view === 'list'" class="wrap pt-10 pb-16">
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-bold text-neutral-900">Données</h2>
+        <p class="text-sm text-neutral-500">Créez et gérez vos jeux de cartes.</p>
+      </div>
+      <button class="btn btn-outline" @click="returnHome = 'home'">Menu</button>
+    </div>
 
-    <form action="" @submit.prevent="createSet" class="flex justify-center gap-3 mb-6 mt-6">
-      <input v-model="newSetName" type="text" placeholder="Nom du nouveau jeu" style="max-width: 20rem;">
-      <button type="submit" :disabled="!newSetName.trim()">Créer un jeu</button>
+    <form @submit.prevent="createSet" class="card mb-6 flex items-center gap-3 p-4">
+      <input v-model="newSetName" type="text" class="input" placeholder="Nom du nouveau jeu" />
+      <button type="submit" class="btn btn-primary shrink-0" :disabled="!newSetName.trim()">Créer un jeu</button>
     </form>
 
-    <p v-if="sets.length === 0" class="text-center text-neutral-500 italic">
+    <p v-if="sets.length === 0" class="empty-state">
       Aucun jeu de données. Créez-en un ci-dessus.
     </p>
 
-    <div v-else class="flex flex-col gap-3 mt-6 mx-8 lg:mx-60 xl:mx-72 2xl:mx-96">
+    <div v-else class="flex flex-col gap-3">
       <div
         v-for="set in sets"
         :key="set.id"
-        class="flex items-center gap-3 border rounded-xl p-3">
-        <div class="flex-1 min-w-0">
-          <strong class="block break-words">{{ set.name }}</strong>
-          <span class="text-neutral-500">{{ set.cards.length }} carte{{ set.cards.length > 1 ? 's' : '' }}</span>
+        class="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+        <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-sm font-bold text-amber-600">
+          {{ set.name.charAt(0).toUpperCase() }}
+        </span>
+        <div class="min-w-0 flex-1">
+          <strong class="block truncate text-sm font-semibold text-neutral-800" :title="set.name">{{ set.name }}</strong>
+          <span class="text-xs text-neutral-500">{{ set.cards.length }} carte{{ set.cards.length > 1 ? 's' : '' }}</span>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
-          <button class="p-1" title="Modifier" @click="editSet(set.id)">
-            <img class="size-6 hover:scale-110 transition duration-100" :src="imgEdit" alt="Modifier">
-          </button>
-          <button class="p-1" title="Supprimer" @click="pendingDeleteId = set.id">
-            <img class="size-6 hover:scale-110 transition duration-100" :src="imgTrash" alt="Supprimer">
-          </button>
-        </div>
+        <button class="btn-icon btn-icon-btn" title="Modifier" @click="editSet(set.id)">
+          <img class="size-5" :src="imgEdit" alt="Modifier">
+        </button>
+        <button class="btn-icon btn-icon-btn" title="Supprimer" @click="pendingDeleteId = set.id">
+          <img class="size-5" :src="imgTrash" alt="Supprimer">
+        </button>
       </div>
-    </div>
-
-    <div class="flex justify-center m-10 gap-5">
-      <button @click="returnHome = 'home'">Revenir au Menu</button>
     </div>
   </div>
 
-  <div v-else>
-    <h4 class="text-center break-words">{{ editingSet?.name }}</h4>
-    <InsertData v-model="currentSetCards" @back="view = 'list'"/>
+  <div v-else class="wrap pt-10 pb-16">
+    <div class="mb-6 flex items-center justify-between">
+      <button class="btn-icon btn-icon-btn" title="Retour à la sélection" @click="view = 'list'">
+        <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m12 19-7-7 7-7" />
+          <path d="M19 12H5" />
+        </svg>
+      </button>
+      <div class="min-w-0 flex-1 px-3 text-center">
+        <h2 class="truncate text-2xl font-bold text-neutral-900" :title="editingSet?.name">{{ editingSet?.name }}</h2>
+      </div>
+      <span class="size-10 shrink-0"></span>
+    </div>
+    <InsertData v-model="currentSetCards" />
   </div>
 
   <Teleport to="body">
-    <div v-if="pendingDeleteId !== null" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="pendingDeleteId = null">
-      <div class="rounded-2xl bg-white p-6 text-center shadow-2xl">
-        <h4 class="mb-4 break-words">Supprimer le jeu « {{ pendingDelete?.name }} » ?</h4>
-        <p class="mb-6 text-neutral-600">Toutes ses cartes seront également supprimées.</p>
-        <div class="flex justify-center gap-6">
-          <button @click="pendingDeleteId = null">Annuler</button>
-          <button class="bg-red-600 text-white" @click="confirmDelete">Supprimer</button>
+    <div v-if="pendingDeleteId !== null" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="pendingDeleteId = null">
+      <div class="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl">
+        <h4 class="mb-2 flex items-center justify-center gap-2 text-lg font-bold text-neutral-900">Supprimer ce jeu ?</h4>
+        <p class="mb-6 break-words text-neutral-600">
+          « <span class="font-bold">{{ pendingDelete?.name }}</span> » sera supprimé, ainsi que toutes ses cartes.
+        </p>
+        <div class="flex justify-center gap-3">
+          <button class="btn btn-outline" @click="pendingDeleteId = null">Annuler</button>
+          <button class="btn btn-danger" @click="confirmDelete">Supprimer</button>
         </div>
       </div>
     </div>

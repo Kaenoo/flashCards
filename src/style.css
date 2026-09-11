@@ -1,82 +1,130 @@
 @import 'tailwindcss';
 
-
-/* :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-.card {
-  padding: 2em;
-}
-
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+@layer base {
+  html {
+    @apply scroll-smooth;
   }
-  a:hover {
-    color: #747bff;
+
+  body {
+    @apply bg-neutral-100 text-neutral-800 antialiased;
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   }
+
   button {
-    background-color: #f9f9f9;
+    @apply cursor-pointer;
   }
-} */
+
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  a:focus-visible {
+    @apply outline-none ring-2 ring-amber-400 ring-offset-2 ring-offset-neutral-100;
+  }
+}
+
+@layer components {
+  /* ---------- Layout ---------- */
+  .wrap {
+    @apply mx-auto w-full max-w-xl px-4 sm:px-6;
+  }
+
+  /* ---------- Boutons ---------- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-150 select-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40;
+  }
+  .btn-primary {
+    @apply bg-amber-400 text-amber-950 shadow-sm hover:bg-amber-300;
+  }
+  .btn-outline {
+    @apply border border-neutral-300 bg-white text-neutral-700 shadow-sm hover:border-neutral-400 hover:bg-neutral-50;
+  }
+  .btn-danger {
+    @apply bg-red-600 text-white shadow-sm hover:bg-red-500;
+  }
+  .btn-ghost {
+    @apply text-neutral-500 hover:text-neutral-800;
+  }
+  .btn-icon {
+    @apply inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800 disabled:pointer-events-none disabled:opacity-40;
+  }
+  .btn-icon-btn {
+    @apply border border-neutral-200 bg-white text-neutral-600 shadow-sm hover:text-neutral-900;
+  }
+
+  /* ---------- Formulaires ---------- */
+  .input {
+    @apply w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-800 outline-none transition placeholder:text-neutral-400 focus:border-amber-400 focus:ring-4 focus:ring-amber-200/50;
+  }
+  .input-table {
+    @apply w-full rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm text-neutral-800 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/60;
+  }
+
+  /* ---------- Segmented control ---------- */
+  .seg {
+    @apply inline-flex w-full rounded-xl border border-neutral-200 bg-white p-1 shadow-sm;
+  }
+  .seg-btn {
+    @apply flex-1 rounded-lg px-4 py-2 text-sm font-medium text-neutral-500 transition hover:text-neutral-800;
+  }
+  .seg-btn-active {
+    @apply bg-amber-400 font-semibold text-amber-950 shadow-sm;
+  }
+
+  /* ---------- Cartes / tuiles ---------- */
+  .card {
+    @apply rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm;
+  }
+  .tile {
+    @apply flex w-full cursor-pointer flex-col items-start gap-1 rounded-2xl border border-neutral-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md disabled:pointer-events-none disabled:opacity-40;
+  }
+  .tile-icon {
+    @apply mb-2 flex size-11 items-center justify-center rounded-xl bg-amber-100 text-amber-600;
+  }
+  .chip {
+    @apply z-10 flex size-10 cursor-pointer items-center justify-center rounded-full border border-white/40 bg-white/85 shadow-sm backdrop-blur transition hover:scale-105 active:scale-95;
+  }
+  .chip.is-active {
+    background-color: #fcd34d;
+  }
+
+  /* ---------- Listes ---------- */
+  .set-row {
+    @apply flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 text-left shadow-sm transition hover:border-amber-300 hover:shadow-md;
+  }
+  .set-name {
+    @apply min-w-0 flex-1 truncate text-sm font-semibold text-neutral-800;
+  }
+  .badge {
+    @apply inline-flex shrink-0 items-center rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-semibold text-neutral-600;
+  }
+  .counter-pill {
+    @apply inline-flex shrink-0 items-center gap-1 rounded-full border border-neutral-200 bg-white px-4 py-1.5 text-sm font-semibold text-neutral-700 shadow-sm;
+  }
+  .empty-state {
+    @apply rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 py-10 text-center text-sm text-neutral-500;
+  }
+  .callout {
+    @apply mt-4 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-5 text-center text-sm text-neutral-500;
+  }
+
+  /* ---------- Carte retournable 3D ---------- */
+  .flip-card {
+    perspective: 1200px;
+  }
+  .flip-inner {
+    @apply relative h-full w-full;
+    transform-style: preserve-3d;
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .flip-card.is-flipped .flip-inner {
+    transform: rotateY(180deg);
+  }
+  .flip-face {
+    @apply absolute inset-0 flex items-center justify-center rounded-[1.75rem];
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .flip-back {
+    transform: rotateY(180deg);
+  }
+}

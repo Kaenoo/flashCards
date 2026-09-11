@@ -1,55 +1,48 @@
 <template>
     <div v-if="modifyData === false">
-        <h4 class="text-center">Entrez les clés-valeurs que vous souhaitez réviser !</h4>
-        
-        <form action="" @submit.prevent>
-            <div class="flex justify-center gap-5 mb-5">
-                <button @click="selectedMode = 'json_md'">JSON ou Tableau Markdown</button>
-                <button @click="selectedMode = 'manual'">Manuellement</button>
+        <div class="card">
+            <div class="mb-6 text-center">
+                <p class="text-lg font-bold text-neutral-900">Entrez les clés-valeurs à réviser</p>
+                <p class="text-sm text-neutral-500">Collez un JSON ou tableau Markdown, importez un fichier ou saisissez manuellement.</p>
             </div>
-            
-            <!-- Entrée Json ou Markdown -->
-            <div v-if="selectedMode === 'json_md'">
-                <textarea v-model="jsonMdInput"></textarea>
-                <div class="flex justify-center gap-3">
-                    <button type="button" :disabled="jsonMdInput.length === 0" @click="verifyPattern(jsonMdInput)">Enregistrer</button>
-                    <input ref="fileInput" type="file" accept=".json,.md,.markdown,.txt" class="hidden" @change="importFile">
-                    <button type="button" @click="fileInput.click()">Importer un fichier</button>
-                </div>
-                <span
-                v-show="listKeysValues.length > 0"
-                class="ml-5">
-                Nombre de cartes : {{ listKeysValues.length }}
-                </span>
-            </div>
-            
-            <!-- Entrée Manuel -->
-            <div v-else>
-                <form action="" @submit.prevent>
-                    <input type="text" v-model="keyName" placeholder="Clé">
-                    <input type="text" v-model="valueName" placeholder="Valeur">
-                    <div class="inline-block align-middle gap 5">
-                        <button type="button" :disabled="!keyName || !valueName" class="mr-10" @click="addKeyValue">Ajouter</button> 
-                        <span
-                            v-show="listKeysValues.length > 0"
-                            class="ml-5">
-                            Nombre de cartes : {{ listKeysValues.length }}
-                        </span>
-                    </div>
-                </form>
-            </div>
-        
-            <div class="flex justify-center m-10 gap-5">
-                <button @click="emit('back')">Revenir aux jeux de données</button>
-                <button v-show="listKeysValues.length > 0" @click="modifyData = true">Modifier</button>
-                <button v-show="listKeysValues.length > 0" @click="exportData('json')">Exporter JSON</button>
-                <button v-show="listKeysValues.length > 0" @click="exportData('markdown')">Exporter Markdown</button>
-            </div>
-        </form>
-    </div>
-  
-    <DataTable v-else v-model="listKeysValues" v-model:modify="modifyData"/>
 
+            <div class="seg mb-5">
+                <button type="button" class="seg-btn" :class="{ 'seg-btn-active': selectedMode === 'json_md' }" @click="selectedMode = 'json_md'">JSON ou Markdown</button>
+                <button type="button" class="seg-btn" :class="{ 'seg-btn-active': selectedMode === 'manual' }" @click="selectedMode = 'manual'">Manuellement</button>
+            </div>
+
+            <!-- Entrée JSON ou Markdown -->
+            <div v-if="selectedMode === 'json_md'" class="mb-5">
+                <textarea v-model="jsonMdInput" rows="8" class="input" placeholder='Ex : {"chat":"cat"} ou un tableau Markdown…'></textarea>
+                <div class="mt-3 flex flex-wrap items-center gap-3">
+                    <button type="button" class="btn btn-primary" :disabled="jsonMdInput.length === 0" @click="verifyPattern(jsonMdInput)">Enregistrer</button>
+                    <input ref="fileInput" type="file" accept=".json,.md,.markdown,.txt" class="hidden" @change="importFile">
+                    <button type="button" class="btn btn-outline" @click="fileInput.click()">Importer un fichier</button>
+                    <span v-show="listKeysValues.length > 0" class="badge">Nombre de cartes : {{ listKeysValues.length }}</span>
+                </div>
+            </div>
+
+            <!-- Entrée manuelle -->
+            <div v-else class="mb-5">
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <input ref="keyInput" v-model="keyName" type="text" class="input" placeholder="Clé" @keydown.enter.prevent="valueInput?.focus()">
+                    <input ref="valueInput" v-model="valueName" type="text" class="input" placeholder="Valeur" @keydown.enter.prevent="addKeyValue">
+                </div>
+                <div class="mt-3 flex flex-wrap items-center gap-3">
+                    <button type="button" class="btn btn-primary" :disabled="!keyName || !valueName" @click="addKeyValue">Ajouter</button>
+                    <span v-show="listKeysValues.length > 0" class="badge">Nombre de cartes : {{ listKeysValues.length }}</span>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-center gap-3 border-t border-neutral-200 pt-5">
+                <button v-show="listKeysValues.length > 0" class="btn btn-outline" @click="modifyData = true">Modifier</button>
+                <button v-show="listKeysValues.length > 0" class="btn btn-outline" @click="exportData('json')">Exporter JSON</button>
+                <button v-show="listKeysValues.length > 0" class="btn btn-outline" @click="exportData('markdown')">Exporter Markdown</button>
+            </div>
+        </div>
+    </div>
+
+    <DataTable v-else v-model="listKeysValues" v-model:modify="modifyData"/>
 </template>
 
 <!-- ******************************** SCRIPT PART ******************************** -->
@@ -57,7 +50,6 @@
 <script setup>
 import { ref } from 'vue'
 import DataTable from './DataTable.vue'
-const emit = defineEmits(['back'])
 let listKeysValues = defineModel({type: Array})
 
 const selectedMode = ref('json_md')
@@ -70,6 +62,8 @@ const valueName = ref('')
 
 const modifyData = ref(false)
 const fileInput = ref(null)
+const keyInput = ref(null)
+const valueInput = ref(null)
 
 /**
  * Ajoute une clé-valeur depuis l'onglet manuel
@@ -271,7 +265,3 @@ const exportData = (format) => {
     URL.revokeObjectURL(url); // Libérer l'objet URL
 };
 </script>
-
-<style>
-
-</style>

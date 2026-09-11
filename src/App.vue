@@ -1,24 +1,55 @@
 <template>
-  <div>
-    <h1 class="text-center">FlashCards</h1>
-  </div>
+  <div class="min-h-screen">
+    <div v-if="pageSelection === 'home'" class="wrap pt-14 pb-16">
+      <header class="mb-12 text-center">
+        <div class="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-300/50">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" />
+            <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" />
+            <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" />
+          </svg>
+        </div>
+        <h1 class="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl">FlashCards</h1>
+        <p class="mt-3 text-neutral-500">Créez vos jeux de cartes et révisez-les où que vous soyez.</p>
+      </header>
 
-  <div v-if="pageSelection === 'home'">
-    <div class="flex flex-col gap-5 mt-10 mx-8 lg:mx-60 xl:mx-72 2xl:mx-96">
-      <button @click="pageSelection = 'data'">Données</button>
-      <button :disabled="datasets.length === 0" @click="pageSelection = 'memrise'">Mémoriser</button>
-      <p v-if="datasets.length === 0" class="text-center text-neutral-500 italic">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <button class="tile" @click="pageSelection = 'data'">
+          <span class="tile-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <ellipse cx="12" cy="5" rx="9" ry="3" />
+              <path d="M3 5v14a9 3 0 0 0 18 0V5" />
+              <path d="M3 12a9 3 0 0 0 18 0" />
+            </svg>
+          </span>
+          <span class="text-lg font-bold text-neutral-900">Données</span>
+          <span class="text-sm text-neutral-500">Créer, modifier et exporter vos jeux de cartes.</span>
+        </button>
+
+        <button class="tile" :disabled="datasets.length === 0" @click="pageSelection = 'memrise'">
+          <span class="tile-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5 2 10l10 5 10-5-10-5Z" />
+              <path d="M2 15l10 5 10-5" />
+            </svg>
+          </span>
+          <span class="text-lg font-bold text-neutral-900">Mémoriser</span>
+          <span class="text-sm text-neutral-500">Réviser un jeu en mode Simple ou Désordre.</span>
+        </button>
+      </div>
+
+      <div v-if="datasets.length === 0" class="callout">
         Aucun jeu de données pour le moment. Créez-en un dans « Données » pour pouvoir mémoriser.
-      </p>
+      </div>
     </div>
-  </div>
 
-  <div v-if="pageSelection === 'data'">
-    <DataSets v-model="datasets" v-model:returnHome="pageSelection"/>
-  </div>
+    <div v-else-if="pageSelection === 'data'">
+      <DataSets v-model="datasets" v-model:returnHome="pageSelection" />
+    </div>
 
-  <div v-if="pageSelection === 'memrise'">
-    <Memrise v-model:datasets="datasets" @return-home="pageSelection = $event"/>
+    <div v-else-if="pageSelection === 'memrise'">
+      <Memrise v-model:datasets="datasets" @return-home="pageSelection = $event" />
+    </div>
   </div>
 </template>
 
