@@ -1,21 +1,21 @@
 <template>
   <div class="card overflow-hidden p-0">
-    <div class="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
-      <h4 class="font-bold text-neutral-900">Modifier les clés-valeurs</h4>
+    <div class="flex items-center justify-between border-b border-neutral-200 px-6 py-4 dark:border-neutral-800">
+      <h4 class="font-bold text-neutral-900 dark:text-neutral-100">Modifier les clés-valeurs</h4>
       <span class="badge">{{ modelValue.length }} carte{{ modelValue.length > 1 ? 's' : '' }}</span>
     </div>
 
     <div class="overflow-x-auto">
       <table class="w-full border-collapse text-sm">
         <thead>
-          <tr class="bg-neutral-50 text-neutral-500">
+          <tr class="bg-neutral-50 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
             <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide">Clés</th>
             <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide">Valeurs</th>
             <th class="w-16 px-4 py-3 text-right text-xs font-bold uppercase tracking-wide">−</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in modelValue" :key="item" class="border-t border-neutral-100">
+          <tr v-for="item in modelValue" :key="item" class="border-t border-neutral-100 dark:border-neutral-800">
             <td class="px-4 py-2">
               <input type="text" class="input-table" v-model="item.key">
             </td>
@@ -29,17 +29,17 @@
             </td>
           </tr>
           <tr v-if="modelValue.length === 0">
-            <td colspan="3" class="px-4 py-14 text-center text-neutral-500">Aucune carte dans ce jeu.</td>
+            <td colspan="3" class="px-4 py-14 text-center text-neutral-500 dark:text-neutral-400">Aucune carte dans ce jeu.</td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <div class="flex flex-wrap items-center justify-center gap-3 border-t border-neutral-200 px-6 py-4">
+    <div class="flex flex-wrap items-center justify-center gap-3 border-t border-neutral-200 px-6 py-4 dark:border-neutral-800">
       <button class="btn btn-outline" @click="resetChanges">Annuler</button>
       <button class="btn btn-primary" :disabled="!verifyChangeInData()" @click="saveChanges">Sauvegarder</button>
       <template v-if="confirmDeleteAll === false && modelValue.length > 0">
-        <span class="mx-1 hidden text-neutral-300 sm:inline">•</span>
+        <span class="mx-1 hidden text-neutral-300 sm:inline dark:text-neutral-600">•</span>
         <button class="btn btn-danger" @click="confirmDeleteAll = true">Supprimer tout</button>
       </template>
       <template v-else-if="confirmDeleteAll === true">

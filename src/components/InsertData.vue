@@ -2,8 +2,8 @@
     <div v-if="modifyData === false">
         <div class="card">
             <div class="mb-6 text-center">
-                <p class="text-lg font-bold text-neutral-900">Entrez les clés-valeurs à réviser</p>
-                <p class="text-sm text-neutral-500">Collez un JSON ou tableau Markdown, importez un fichier ou saisissez manuellement.</p>
+                <p class="text-lg font-bold text-neutral-900 dark:text-neutral-100">Entrez les clés-valeurs à réviser</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">Collez un JSON ou tableau Markdown, importez un fichier ou saisissez manuellement.</p>
             </div>
 
             <div class="seg mb-5">
@@ -34,7 +34,7 @@
                 </div>
             </div>
 
-            <div class="flex flex-wrap items-center justify-center gap-3 border-t border-neutral-200 pt-5">
+            <div class="flex flex-wrap items-center justify-center gap-3 border-t border-neutral-200 pt-5 dark:border-neutral-800">
                 <button v-show="listKeysValues.length > 0" class="btn btn-outline" @click="modifyData = true">Modifier</button>
                 <button v-show="listKeysValues.length > 0" class="btn btn-outline" @click="exportData('json')">Exporter JSON</button>
                 <button v-show="listKeysValues.length > 0" class="btn btn-outline" @click="exportData('markdown')">Exporter Markdown</button>
@@ -50,6 +50,11 @@
 <script setup>
 import { ref } from 'vue'
 import DataTable from './DataTable.vue'
+import { tryParseCards, generateJson, generateMarkdown } from '../utils/cards'
+import { useToast } from '../composables/useToast'
+
+const { toast } = useToast()
+
 let listKeysValues = defineModel({type: Array})
 
 const selectedMode = ref('json_md')
@@ -78,92 +83,6 @@ const addKeyValue = () => {
 }
 
 /**
- * Découpe une ligne de tableau Markdown en cellules,
- * en respectant les `|` échappées (\|).
- * @param line {string}
- * @returns {string[]}
- */
-const splitRow = (line) => {
-  const cells = []
-  let current = ''
-  for (let i = 0; i < line.length; i++) {
-    if (line[i] === '\\' && line[i + 1] === '|') {
-      current += '|'
-      i++
-    } else if (line[i] === '|') {
-      cells.push(current)
-      current = ''
-    } else {
-      current += line[i]
-    }
-  }
-  cells.push(current)
-  return cells.map(cell => cell.trim()).filter(cell => cell !== '')
-}
-
-/**
- * Transforme un tableau Markdown en liste de cartes [{key, value}]
- * @param content {string} texte du tableau markdown
- * @returns {Array<{key: string, value: string}>}
- */
-const parseMarkdownCards = (content) => {
-  const lines = content.trim().split("\n")
-  if (
-    lines.length < 2 ||
-    !lines[0].includes("|") ||
-    !lines[1].match(/^[-| ]+$/)
-  ) return []
-
-  const cards = []
-  lines.slice(2).forEach(line => {
-    if (line.trim() === '') return
-    const columns = splitRow(line)
-    if (columns.length >= 2) {
-      cards.push({ key: columns[0], value: columns[1] })
-    }
-  })
-  return cards
-}
-
-/**
- * Convertit une valeur JSON (objet, tableau d'objets ou de paires) en cartes
- * @param data {*} valeur JSON parsée
- * @returns {Array<{key: string, value: string}>}
- */
-const parseJsonCards = (data) => {
-  if (Array.isArray(data)) {
-    return data
-      .map(item => {
-        if (Array.isArray(item)) {
-          return { key: String(item[0] ?? ''), value: String(item[1] ?? '') }
-        }
-        if (item && typeof item === 'object') {
-          return { key: String(item.key ?? ''), value: String(item.value ?? '') }
-        }
-        return null
-      })
-      .filter(card => card !== null)
-  }
-  if (data && typeof data === 'object') {
-    return Object.entries(data).map(([key, value]) => ({ key, value: String(value) }))
-  }
-  return []
-}
-
-/**
- * Tente d'interpréter le contenu comme du JSON puis comme du Markdown
- * @param text {string}
- * @returns {Array<{key: string, value: string}>}
- */
-const tryParseCards = (text) => {
-  try {
-    return parseJsonCards(JSON.parse(text))
-  } catch {
-    return parseMarkdownCards(text)
-  }
-}
-
-/**
  * Vérifie si le pattern JSON ou markdown est respecté puis ajoute les cartes
  * @param content {string} contenu du textarea
  */
@@ -175,8 +94,9 @@ const verifyPattern = (content) => {
   if (cards.length > 0) {
     listKeysValues.value.push(...cards)
     jsonMdInput.value = ''
+    toast(`${cards.length} carte(s) ajoutée(s)`, 'success')
   } else {
-    alert("Format invalide : entrez un JSON ou un tableau Markdown.")
+    toast('Format invalide : entrez un JSON ou un tableau Markdown.', 'error')
   }
 }
 
@@ -197,71 +117,41 @@ const importFile = (event) => {
   }
   reader.readAsText(file)
 }
-  /**
-   * Génère un JSON (tableau de paires) depuis listKeysValues.
-   * Le format tableau préserve les clés dupliquées et réimporte sans erreur.
-   * @returns {string}
-   */
-  const generateJson = () => {
-    return JSON.stringify(
-      listKeysValues.value.map(item => ({ key: item.key, value: item.value })),
-      null,
-      2
-    );
-};
-
-/**
- * Génère le contenu Markdown (tableau) à partir de listKeysValues
- * @returns {string} Le contenu Markdown
- */
-const escapeMd = (text) => String(text).replace(/\|/g, '\\|').replace(/\n/g, ' ')
-
-const generateMarkdown = () => {
-    let markdown = "| Clé | Valeur |\n";
-    markdown += "| --- | --- |\n"; // Ligne de séparation pour le tableau Markdown
-
-    listKeysValues.value.forEach(item => {
-        const key = escapeMd(item.key);
-        const value = escapeMd(item.value);
-        markdown += `| ${key} | ${value} |\n`;
-    });
-
-    return markdown;
-};
 
 /**
  * Déclenche le téléchargement du contenu exporté
  * @param {string} format 'json' ou 'markdown'
  */
 const exportData = (format) => {
-    if (listKeysValues.value.length === 0) {
-        alert("Aucune donnée à exporter.");
-        return;
-    }
+  if (listKeysValues.value.length === 0) {
+    toast('Aucune donnée à exporter.', 'error')
+    return
+  }
 
-    let content, filename, mimeType;
+  let content, filename, mimeType
 
-    if (format === 'json') {
-        content = generateJson();
-        filename = 'export_cles_valeurs.json';
-        mimeType = 'application/json';
-    } else if (format === 'markdown') {
-        content = generateMarkdown();
-        filename = 'export_cles_valeurs.md';
-        mimeType = 'text/markdown';
-    } else {
-        return; 
-    }
+  if (format === 'json') {
+    content = generateJson(listKeysValues.value)
+    filename = 'export_cles_valeurs.json'
+    mimeType = 'application/json'
+  } else if (format === 'markdown') {
+    content = generateMarkdown(listKeysValues.value)
+    filename = 'export_cles_valeurs.md'
+    mimeType = 'text/markdown'
+  } else {
+    return
+  }
 
-    // Créer un élément <a> temporaire pour le téléchargement
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url); // Libérer l'objet URL
-};
+  // Créer un élément <a> temporaire pour le téléchargement
+  const blob = new Blob([content], { type: mimeType })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url) // Libérer l'objet URL
+  toast('Export téléchargé', 'success')
+}
 </script>
