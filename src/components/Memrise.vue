@@ -242,6 +242,24 @@
       </div>
     </div>
   </Teleport>
+
+  <Teleport to="body">
+    <div v-if="showResumeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="showResumeModal = false; resumeSession = null">
+      <div class="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl dark:bg-neutral-900">
+        <h4 class="mb-2 text-lg font-bold text-neutral-900 dark:text-neutral-100">Interrogation en pause</h4>
+        <p class="mb-6 text-neutral-600 dark:text-neutral-300">
+          Une interrogation est en cours sur ce jeu
+          (<span class="font-bold">{{ resumeSession?.ratedEntries.length ?? 0 }} / {{ resumeSession?.deck.length ?? 0 }}</span> cartes
+          notées). Voulez-vous la reprendre ?
+        </p>
+        <div class="flex flex-col items-stretch gap-3">
+          <button class="btn btn-primary" @click="resumeInterrogation">Reprendre</button>
+          <button class="btn btn-outline" @click="restartInterrogation">Recommencer</button>
+          <button class="btn btn-ghost" @click="showResumeModal = false; resumeSession = null">Annuler</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <!-- ******************************** SCRIPT PART ******************************** -->
@@ -249,6 +267,9 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import imgDelete from '../assets/delete.png'
+import { useToast } from '../composables/useToast'
+
+const { toast } = useToast()
 
 const datasets = defineModel('datasets', { type: Array })
 
@@ -264,6 +285,38 @@ const inverted = ref(false)
 const confirmingDelete = ref(false)
 const cardToDelete = ref(null)
 const ratedEntries = ref([])
+const resumeSession = ref(null)
+const showResumeModal = ref(false)
+
+const QUIZ_KEY = 'flashCardsQuizSession'
+
+/**
+ * Charge la session d'interrogation mise en pause (null si aucune/illisible)
+ */
+const loadQuizSession = () => {
+  try {
+    return JSON.parse(localStorage.getItem(QUIZ_KEY))
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Ne conserve que l'essentiel (copies) pour reprendre plus tard
+ */
+const saveQuizSession = () => {
+  localStorage.setItem(QUIZ_KEY, JSON.stringify({
+    datasetId: selectedSetId.value,
+    currentIndex: currentIndex.value,
+    ratedEntries: ratedEntries.value.map(e => ({ card: { key: e.card.key, value: e.card.value }, ok: e.ok })),
+    deck: deck.value.map(card => ({ key: card.key, value: card.value })),
+    inverted: inverted.value
+  }))
+}
+
+const clearQuizSession = () => {
+  localStorage.removeItem(QUIZ_KEY)
+}
 
 const selectedSet = computed(() => datasets.value.find(s => s.id === selectedSetId.value))
 
@@ -308,6 +361,21 @@ const selectSet = (id) => {
 
 const startSession = (selectedMode) => {
   if (selectedCards.value.length === 0) return
+  if (selectedMode === 'quiz') {
+    const session = loadQuizSession()
+    if (session
+        && session.datasetId === selectedSetId.value
+        && Array.isArray(session.deck) && session.deck.length > 0
+        && Array.isArray(session.ratedEntries) && session.ratedEntries.length < session.deck.length) {
+      resumeSession.value = session
+      showResumeModal.value = true
+      return
+    }
+  }
+  beginSession(selectedMode)
+}
+
+const beginSession = (selectedMode) => {
   mode.value = selectedMode
   deck.value = [...selectedCards.value]
   if (selectedMode === 'disorder') {
@@ -320,7 +388,43 @@ const startSession = (selectedMode) => {
   stage.value = 'game'
 }
 
+/**
+ * Reprend l'interrogation mise en pause là où elle s'était arrêtée
+ */
+const resumeInterrogation = () => {
+  const session = resumeSession.value
+  if (!session) {
+    beginSession('quiz')
+    return
+  }
+  mode.value = 'quiz'
+  deck.value = (session.deck ?? []).map(card => ({ key: card.key, value: card.value }))
+  currentIndex.value = Math.min(session.currentIndex ?? 0, Math.max(0, deck.value.length - 1))
+  ratedEntries.value = (session.ratedEntries ?? [])
+    .filter(e => e && e.card)
+    .map(e => ({ card: { key: e.card.key, value: e.card.value }, ok: e.ok }))
+  inverted.value = !!session.inverted
+  flipped.value = false
+  resumeSession.value = null
+  showResumeModal.value = false
+  stage.value = 'game'
+}
+
+/**
+ * Repart de zéro (abandonne la session mise en pause)
+ */
+const restartInterrogation = () => {
+  clearQuizSession()
+  resumeSession.value = null
+  showResumeModal.value = false
+  beginSession('quiz')
+}
+
 const goToMode = () => {
+  if (isQuiz.value && stage.value === 'game' && deck.value.length > 0 && ratedEntries.value.length < deck.value.length) {
+    saveQuizSession()
+    toast('Interrogation mise en pause. Vous pourrez la reprendre.', 'info')
+  }
   stage.value = 'mode'
   flipped.value = false
   ratedEntries.value = []
@@ -354,6 +458,7 @@ const rateCard = (ok) => {
   if (currentIndex.value < deck.value.length - 1) {
     currentIndex.value++
   } else {
+    clearQuizSession()
     stage.value = 'summary'
   }
 }
@@ -403,7 +508,9 @@ const confirmDelete = () => {
 
   const setIndex = datasets.value.findIndex(s => s.id === selectedSetId.value)
   if (setIndex !== -1) {
-    const nextCards = datasets.value[setIndex].cards.filter(card => card !== cardToDelete.value)
+    const nextCards = datasets.value[setIndex].cards.filter(
+      card => !(card.key === cardToDelete.value.key && card.value === cardToDelete.value.value)
+    )
     datasets.value[setIndex].cards = nextCards
   }
 
