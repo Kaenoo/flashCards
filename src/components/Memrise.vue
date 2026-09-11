@@ -23,7 +23,7 @@
   <div v-else-if="stage === 'mode'">
     <div class="flex items-center justify-between mb-4">
       <button @click="stage = 'sets'" class="p-0 border-0">
-        <img class="size-11 rounded active:scale-110 active:bg-amber-200" src="../assets/return.svg" alt="Retour à la sélection du jeu">
+        <img class="size-11 rounded active:scale-110 active:bg-amber-200" src="../assets/back.svg" alt="Retour à la page précédente">
       </button>
       <h4 class="text-center flex-1 break-words">{{ selectedSet?.name }}</h4>
       <span class="size-11"></span>
@@ -53,26 +53,33 @@
   <div v-else>
     <div class="flex items-center justify-between mb-4">
       <button @click="stage = 'mode'" class="p-0 border-0">
-        <img class="size-11 rounded active:scale-110 active:bg-amber-200" src="../assets/return.svg" alt="Retour au choix du mode">
+        <img class="size-11 rounded active:scale-110 active:bg-amber-200" src="../assets/back.svg" alt="Retour à la page précédente">
       </button>
       <p class="text-center flex-1">Carte {{ currentIndex + 1 }} / {{ deck.length }}</p>
-      <div class="flex-1 flex justify-end gap-2">
-        <button @click="deleteCurrent" class="p-1">
-          <img class="size-8 opacity-70 hover:opacity-100 hover:scale-110 transition duration-100" :src="imgDelete" alt="Supprimer cette carte">
-        </button>
-      </div>
+      <span class="size-11"></span>
     </div>
 
     <div class="flex flex-col items-center">
       <div
-        class="flex items-center justify-center size-80 rounded-3xl bg-amber-300 shadow-2xl shadow-amber-100 cursor-pointer select-none"
+        class="relative flex items-center justify-center size-80 rounded-3xl bg-amber-300 cursor-pointer select-none"
         @click="flipCard">
+        <button
+          class="absolute top-3 left-3 p-1.5 rounded-full bg-white/80 active:scale-110 transition duration-100"
+          title="Inverser clés/valeurs"
+          @click.stop="invertDeck">
+          <img class="size-6" src="../assets/return.svg" alt="Inverser clés/valeurs">
+        </button>
+        <button
+          class="absolute top-3 right-3 p-2 rounded-full bg-white/80 opacity-80 hover:opacity-100 active:scale-110 transition duration-100"
+          title="Supprimer cette carte"
+          @click.stop="deleteCurrent">
+          <img class="size-5" :src="imgDelete" alt="Supprimer cette carte">
+        </button>
         <h4 class="text-center px-6 break-words" v-text="cardFace"></h4>
       </div>
 
       <div class="flex justify-center gap-10 pt-6">
         <button @click="prevCard" :disabled="currentIndex === 0">Retour</button>
-        <button @click="flipCard">Retourner</button>
         <button @click="nextCard" :disabled="currentIndex >= deck.length - 1">Suivant</button>
       </div>
     </div>
@@ -112,6 +119,7 @@ const mode = ref(null)
 const deck = ref([])
 const currentIndex = ref(0)
 const flipped = ref(false)
+const inverted = ref(false)
 const confirmingDelete = ref(false)
 const cardToDelete = ref(null)
 
@@ -119,9 +127,16 @@ const selectedSet = computed(() => datasets.value.find(s => s.id === selectedSet
 
 const selectedCards = computed(() => selectedSet.value?.cards ?? [])
 
+/**
+ * Face affichée en fonction du retournement et de l'inversion
+ * (clé-valeur <-> valeur-clé, uniquement pendant la session)
+ */
 const cardFace = computed(() => {
   const card = deck.value[currentIndex.value]
-  return card ? (flipped.value ? card.value : card.key) : ''
+  if (!card) return ''
+  const front = inverted.value ? card.value : card.key
+  const back = inverted.value ? card.key : card.value
+  return flipped.value ? back : front
 })
 
 const selectSet = (id) => {
@@ -132,13 +147,26 @@ const selectSet = (id) => {
 const startSession = (selectedMode) => {
   if (selectedCards.value.length === 0) return
   mode.value = selectedMode
-  deck.value = selectedCards.value.map(card => ({ ...card }))
+  deck.value = [...selectedCards.value]
   if (selectedMode === 'disorder') {
-    deck.value.sort(() => Math.random() - 0.5)
+    shuffleDeck()
   }
   currentIndex.value = 0
   flipped.value = false
+  inverted.value = false
   stage.value = 'game'
+}
+
+const shuffleDeck = () => {
+  deck.value = [...deck.value].sort(() => Math.random() - 0.5)
+}
+
+/**
+ * Inverse clés/valeurs du jeu pendant la partie
+ */
+const invertDeck = () => {
+  inverted.value = !inverted.value
+  flipped.value = false
 }
 
 const flipCard = () => {
@@ -192,6 +220,7 @@ const goHome = () => {
   deck.value = []
   currentIndex.value = 0
   flipped.value = false
+  inverted.value = false
   confirmingDelete.value = false
   cardToDelete.value = null
   emit('return-home', 'home')
