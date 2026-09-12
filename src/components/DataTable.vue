@@ -42,6 +42,21 @@
     </div>
   </div>
 
+  <button
+    v-if="showScrollBtn"
+    class="btn-icon btn-icon-btn fixed right-6 bottom-6 z-40 shadow-lg"
+    :title="nearTop ? 'Aller en bas de la liste' : 'Revenir en haut'"
+    @click="jumpScroll">
+    <svg v-if="nearTop" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12 7 7 7-7" />
+      <path d="M12 19V5" />
+    </svg>
+    <svg v-else class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12 7-7 7 7" />
+      <path d="M12 19V5" />
+    </svg>
+  </button>
+
   <Teleport to="body">
     <div v-if="confirmDeleteAll" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="confirmDeleteAll = false">
       <div class="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl dark:bg-neutral-900">
@@ -62,11 +77,14 @@
 <!-- ******************************** SCRIPT PART ******************************** -->
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useToast } from '../composables/useToast'
 import imgDelete from '../assets/delete.png'
 
 const { toast } = useToast()
+
+const LONG_LIST_THRESHOLD = 20
+const NEAR_TOP_PX = 100
 
 const modelValue = defineModel({ type: Array})
 const modify = defineModel('modify')
@@ -75,6 +93,39 @@ const originalData = ref(JSON.parse(JSON.stringify(modelValue.value)))
 
 const hasChanged = ref(false)
 const confirmDeleteAll = ref(false)
+
+const pageScrollable = ref(false)
+const nearTop = ref(true)
+
+const showScrollBtn = computed(() => (
+  modelValue.value.length >= LONG_LIST_THRESHOLD && pageScrollable.value
+))
+
+const updateScroll = () => {
+  const el = document.documentElement
+  pageScrollable.value = el.scrollHeight > el.clientHeight + 1
+  nearTop.value = window.scrollY < NEAR_TOP_PX
+}
+
+const jumpScroll = () => {
+  window.scrollTo({
+    top: nearTop.value ? document.documentElement.scrollHeight : 0,
+    behavior: 'smooth'
+  })
+}
+
+onMounted(() => {
+  updateScroll()
+  window.addEventListener('scroll', updateScroll, { passive: true })
+  window.addEventListener('resize', updateScroll)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', updateScroll)
+  window.removeEventListener('resize', updateScroll)
+})
+
+watch(() => modelValue.value.length, updateScroll)
 
 const verifyChangeInData = () => hasChanged.value
 
