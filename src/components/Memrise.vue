@@ -169,12 +169,12 @@
           class="flip-card h-80 w-72 cursor-pointer select-none sm:h-96 sm:w-80"
           :class="{ 'is-flipped': flipped }"
           @click="flipCard">
-          <div class="flip-inner">
+          <div class="flip-inner" @transitionend="onFlipTransitionEnd">
             <div class="flip-face bg-gradient-to-br from-amber-300 to-amber-400 shadow-xl shadow-neutral-400/30">
               <p class="break-words px-8 text-center text-2xl font-bold text-amber-950" v-text="frontText"></p>
             </div>
             <div class="flip-face flip-back border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
-              <p class="break-words px-8 text-center text-2xl font-bold text-neutral-800 dark:text-neutral-100" v-text="backText"></p>
+              <p class="break-words px-8 text-center text-2xl font-bold text-neutral-800 dark:text-neutral-100" v-text="displayBackText"></p>
             </div>
           </div>
         </div>
@@ -281,6 +281,7 @@ const mode = ref(null)
 const deck = ref([])
 const currentIndex = ref(0)
 const flipped = ref(false)
+const facingBack = ref('')
 const inverted = ref(false)
 const confirmingDelete = ref(false)
 const cardToDelete = ref(null)
@@ -354,6 +355,12 @@ const backText = computed(() => {
   return inverted.value ? card.key : card.value
 })
 
+/**
+ * Texte du dos tel qu'affiché : pendant un retournement (navigation, inversion…),
+ * on gèle l'ancienne valeur pour ne pas révéler celle de la carte suivante.
+ */
+const displayBackText = computed(() => facingBack.value || backText.value)
+
 const selectSet = (id) => {
   selectedSetId.value = id
   stage.value = 'mode'
@@ -383,6 +390,7 @@ const beginSession = (selectedMode) => {
   }
   currentIndex.value = 0
   flipped.value = false
+  facingBack.value = ''
   inverted.value = false
   ratedEntries.value = []
   stage.value = 'game'
@@ -405,6 +413,7 @@ const resumeInterrogation = () => {
     .map(e => ({ card: { key: e.card.key, value: e.card.value }, ok: e.ok }))
   inverted.value = !!session.inverted
   flipped.value = false
+  facingBack.value = ''
   resumeSession.value = null
   showResumeModal.value = false
   stage.value = 'game'
@@ -438,12 +447,19 @@ const shuffleDeck = () => {
  * Inverse clés/valeurs du jeu pendant la partie
  */
 const invertDeck = () => {
+  if (flipped.value) {
+    facingBack.value = backText.value
+  }
   inverted.value = !inverted.value
   flipped.value = false
 }
 
 const flipCard = () => {
   flipped.value = !flipped.value
+}
+
+const onFlipTransitionEnd = () => {
+  facingBack.value = ''
 }
 
 /**
@@ -454,6 +470,9 @@ const rateCard = (ok) => {
   const card = deck.value[currentIndex.value]
   if (!card) return
   ratedEntries.value.push({ card, ok })
+  if (flipped.value) {
+    facingBack.value = backText.value
+  }
   flipped.value = false
   if (currentIndex.value < deck.value.length - 1) {
     currentIndex.value++
@@ -471,6 +490,7 @@ const startReview = () => {
   deck.value = [...wrongCards.value]
   currentIndex.value = 0
   flipped.value = false
+  facingBack.value = ''
   inverted.value = false
   ratedEntries.value = []
   stage.value = 'game'
@@ -478,6 +498,9 @@ const startReview = () => {
 
 const nextCard = () => {
   if (currentIndex.value < deck.value.length - 1) {
+    if (flipped.value) {
+      facingBack.value = backText.value
+    }
     currentIndex.value++
     flipped.value = false
   }
@@ -485,6 +508,9 @@ const nextCard = () => {
 
 const prevCard = () => {
   if (currentIndex.value > 0) {
+    if (flipped.value) {
+      facingBack.value = backText.value
+    }
     currentIndex.value--
     flipped.value = false
   }
@@ -500,6 +526,9 @@ const confirmDelete = () => {
 
   let nextDeckIndex = deck.value.indexOf(cardToDelete.value)
 
+  if (flipped.value) {
+    facingBack.value = backText.value
+  }
   deck.value = deck.value.filter(card => card !== cardToDelete.value)
   ratedEntries.value = ratedEntries.value.filter(e => e.card !== cardToDelete.value)
   if (currentIndex.value > nextDeckIndex || currentIndex.value >= deck.value.length) {
