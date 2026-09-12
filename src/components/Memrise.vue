@@ -260,6 +260,25 @@
       </div>
     </div>
   </Teleport>
+
+  <Teleport to="body">
+    <div v-if="showFocusModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="showFocusModal = false; focusInfo = null">
+      <div class="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl dark:bg-neutral-900">
+        <h4 class="mb-2 text-lg font-bold text-neutral-900 dark:text-neutral-100">Cartes à revoir</h4>
+        <p class="mb-6 text-neutral-600 dark:text-neutral-300">
+          <span class="font-bold">{{ focusInfo?.cards.length }}</span>
+          carte{{ focusInfo?.cards.length > 1 ? 's' : '' }} restent à revoir depuis votre dernière interrogation
+          <template v-if="focusInfo?.date"> ({{ focusInfo.date }}).</template>
+          <template v-else>.</template>
+        </p>
+        <div class="flex flex-col items-stretch gap-3">
+          <button class="btn btn-primary" @click="startFocusReview">Revoir ces cartes</button>
+          <button class="btn btn-outline" @click="startNewInterrogation">Nouvelle partie</button>
+          <button class="btn btn-ghost" @click="showFocusModal = false; focusInfo = null">Annuler</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <!-- ******************************** SCRIPT PART ******************************** -->
@@ -268,6 +287,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import imgDelete from '../assets/delete.png'
 import { useToast } from '../composables/useToast'
+import { filterWrongCards, buildReviewRecord } from '../utils/reviews'
 
 const { toast } = useToast()
 
@@ -288,6 +308,8 @@ const cardToDelete = ref(null)
 const ratedEntries = ref([])
 const resumeSession = ref(null)
 const showResumeModal = ref(false)
+const focusInfo = ref(null)
+const showFocusModal = ref(false)
 
 const QUIZ_KEY = 'flashCardsQuizSession'
 
@@ -317,6 +339,20 @@ const saveQuizSession = () => {
 
 const clearQuizSession = () => {
   localStorage.removeItem(QUIZ_KEY)
+}
+
+const REVIEWS_KEY = 'flashCardsReviews'
+
+const loadReviews = () => {
+  try {
+    return JSON.parse(localStorage.getItem(REVIEWS_KEY)) ?? {}
+  } catch {
+    return {}
+  }
+}
+
+const saveReviews = (reviews) => {
+  localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews))
 }
 
 const selectedSet = computed(() => datasets.value.find(s => s.id === selectedSetId.value))
@@ -361,6 +397,68 @@ const backText = computed(() => {
  */
 const displayBackText = computed(() => facingBack.value || backText.value)
 
+/**
+ * Focus « à revoir » valide pour le jeu courant : cartes toujours présentes,
+ * non vide. Retourne { cards, date } ou null.
+ */
+const getReviewFocus = () => {
+  if (!selectedSet.value) return null
+  const reviews = loadReviews()
+  const rec = reviews[selectedSetId.value]
+  if (!rec || !Array.isArray(rec.wrong) || rec.wrong.length === 0) return null
+  const cards = filterWrongCards(rec.wrong, selectedCards.value)
+  if (cards.length === 0) return null
+  let date = ''
+  if (rec.date) {
+    try {
+      date = new Date(rec.date).toLocaleDateString('fr-FR')
+    } catch {
+      date = ''
+    }
+  }
+  return { cards, date }
+}
+
+/**
+ * Persiste le focus « à revoir » après une interrogation terminée
+ * (modèle : le focus = les cartes ratées de la dernière interrogation).
+ */
+const persistReviewResult = () => {
+  const reviews = loadReviews()
+  const record = buildReviewRecord({
+    wrong: filterWrongCards(wrongCards.value, selectedCards.value),
+    total: totalRated.value,
+    correct: correctCount.value
+  })
+  if (record) {
+    reviews[selectedSetId.value] = record
+  } else {
+    delete reviews[selectedSetId.value]
+  }
+  saveReviews(reviews)
+}
+
+/**
+ * Lance une interrogation restreinte aux cartes à revoir persistées.
+ */
+const startFocusReview = () => {
+  const cards = focusInfo.value?.cards ?? []
+  showFocusModal.value = false
+  focusInfo.value = null
+  if (cards.length === 0) return
+  beginSession('quiz', cards)
+}
+
+/**
+ * Ferme le focus et démarre une nouvelle interrogation complète
+ * (l'écrasement du focus aura lieu à la fin de la partie).
+ */
+const startNewInterrogation = () => {
+  showFocusModal.value = false
+  focusInfo.value = null
+  beginSession('quiz')
+}
+
 const selectSet = (id) => {
   selectedSetId.value = id
   stage.value = 'mode'
@@ -378,14 +476,20 @@ const startSession = (selectedMode) => {
       showResumeModal.value = true
       return
     }
+    const focus = getReviewFocus()
+    if (focus) {
+      focusInfo.value = focus
+      showFocusModal.value = true
+      return
+    }
   }
   beginSession(selectedMode)
 }
 
-const beginSession = (selectedMode) => {
+const beginSession = (selectedMode, initialDeck = null) => {
   mode.value = selectedMode
-  deck.value = [...selectedCards.value]
-  if (selectedMode === 'disorder') {
+  deck.value = initialDeck ? [...initialDeck] : [...selectedCards.value]
+  if (selectedMode === 'disorder' && !initialDeck) {
     shuffleDeck()
   }
   currentIndex.value = 0
@@ -478,6 +582,7 @@ const rateCard = (ok) => {
     currentIndex.value++
   } else {
     clearQuizSession()
+    persistReviewResult()
     stage.value = 'summary'
   }
 }
@@ -559,6 +664,8 @@ const goHome = () => {
   ratedEntries.value = []
   confirmingDelete.value = false
   cardToDelete.value = null
+  focusInfo.value = null
+  showFocusModal.value = false
   emit('return-home', 'home')
 }
 

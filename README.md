@@ -15,6 +15,7 @@ Application web (PWA) pour créer des jeux de cartes mémoire (clés → valeurs
   - **Désordre** : cartes mélangées ;
   - **Interrogation** : carte retournée puis notée « Je savais » / « À revoir », avec barre de progression et **récapitulatif** en fin de partie (score, cartes à revoir).
   - **Pause et reprise d'interrogation** : quitter une partie ne perd pas l'historique — à la reprise, un écran propose de *reprendre là où vous en étiez* ou de *recommencer*.
+  - **Focus « À revoir » persistant** : les cartes ratées d'une interrogation sont mémorisées ; en revenant plus tard, un écran propose de *les revoir* (seulement ces cartes) ou de démarrer une *nouvelle partie*.
 - **Mode sombre** : bouton manuel, suivi de la préférence système par défaut (persisté).
 - **PWA** : installable, fonctionne hors ligne (précache automatique).
 - **Toasts** de confirmation/succès/erreur à chaque action.
@@ -72,6 +73,7 @@ Les données sont stockées en `localStorage` (aucun serveur requis) :
 | `flashCardDatasets`     | Jeux de cartes : `[{ id, name, cards: [{ key, value }] }]` |
 | `flashCardsTheme`       | Préférence de thème (`dark` / `light`)           |
 | `flashCardsQuizSession` | Interrogation en pause (historique, reprise)     |
+| `flashCardsReviews`     | Focus « À revoir » par jeu (dernière interrogation terminée) |
 | `listKeysValues`        | Ancien format, migré automatiquement             |
 
 Exemple de structure d'un jeu :
