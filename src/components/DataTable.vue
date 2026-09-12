@@ -45,14 +45,14 @@
   <button
     v-if="showScrollBtn"
     class="btn-icon btn-icon-btn fixed right-6 bottom-6 z-40 shadow-lg"
-    :title="nearTop ? 'Aller en bas de la liste' : 'Revenir en haut'"
+    :title="nearBottom ? 'Revenir en haut' : 'Aller en bas de la liste'"
     @click="jumpScroll">
-    <svg v-if="nearTop" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="m5 12 7 7 7-7" />
+    <svg v-if="nearBottom" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12 7-7 7 7" />
       <path d="M12 19V5" />
     </svg>
     <svg v-else class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="m5 12 7-7 7 7" />
+      <path d="m5 12 7 7 7-7" />
       <path d="M12 19V5" />
     </svg>
   </button>
@@ -84,7 +84,7 @@ import imgDelete from '../assets/delete.png'
 const { toast } = useToast()
 
 const LONG_LIST_THRESHOLD = 20
-const NEAR_TOP_PX = 100
+const NEAR_BOTTOM_PX = 100
 
 const modelValue = defineModel({ type: Array})
 const modify = defineModel('modify')
@@ -95,7 +95,7 @@ const hasChanged = ref(false)
 const confirmDeleteAll = ref(false)
 
 const pageScrollable = ref(false)
-const nearTop = ref(true)
+const nearBottom = ref(false)
 
 const showScrollBtn = computed(() => (
   modelValue.value.length >= LONG_LIST_THRESHOLD && pageScrollable.value
@@ -104,12 +104,12 @@ const showScrollBtn = computed(() => (
 const updateScroll = () => {
   const el = document.documentElement
   pageScrollable.value = el.scrollHeight > el.clientHeight + 1
-  nearTop.value = window.scrollY < NEAR_TOP_PX
+  nearBottom.value = (el.scrollHeight - el.clientHeight - window.scrollY) <= NEAR_BOTTOM_PX
 }
 
 const jumpScroll = () => {
   window.scrollTo({
-    top: nearTop.value ? document.documentElement.scrollHeight : 0,
+    top: nearBottom.value ? 0 : document.documentElement.scrollHeight,
     behavior: 'smooth'
   })
 }

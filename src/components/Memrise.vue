@@ -314,31 +314,43 @@ const showFocusModal = ref(false)
 const QUIZ_KEY = 'flashCardsQuizSession'
 
 /**
- * Charge la session d'interrogation mise en pause (null si aucune/illisible)
+ * Charge les sessions d'interrogation mises en pause (map par identifiant de jeu)
  */
-const loadQuizSession = () => {
+const loadQuizSessions = () => {
   try {
-    return JSON.parse(localStorage.getItem(QUIZ_KEY))
+    return JSON.parse(localStorage.getItem(QUIZ_KEY)) ?? {}
   } catch {
-    return null
+    return {}
   }
 }
 
+const loadQuizSession = (setId) => {
+  const sessions = loadQuizSessions()
+  return sessions && typeof sessions === 'object' ? (sessions[setId] ?? null) : null
+}
+
 /**
- * Ne conserve que l'essentiel (copies) pour reprendre plus tard
+ * Ne conserve que l'essentiel (copies) pour reprendre plus tard.
+ * Une partie par jeu : lancer une interrogation sur un autre jeu
+ * ne supprime pas la session en pause du premier.
  */
 const saveQuizSession = () => {
-  localStorage.setItem(QUIZ_KEY, JSON.stringify({
-    datasetId: selectedSetId.value,
+  const sessions = loadQuizSessions()
+  sessions[selectedSetId.value] = {
     currentIndex: currentIndex.value,
     ratedEntries: ratedEntries.value.map(e => ({ card: { key: e.card.key, value: e.card.value }, ok: e.ok })),
     deck: deck.value.map(card => ({ key: card.key, value: card.value })),
     inverted: inverted.value
-  }))
+  }
+  localStorage.setItem(QUIZ_KEY, JSON.stringify(sessions))
 }
 
-const clearQuizSession = () => {
-  localStorage.removeItem(QUIZ_KEY)
+const clearQuizSession = (setId = selectedSetId.value) => {
+  const sessions = loadQuizSessions()
+  if (Object.prototype.hasOwnProperty.call(sessions, setId)) {
+    delete sessions[setId]
+    localStorage.setItem(QUIZ_KEY, JSON.stringify(sessions))
+  }
 }
 
 const REVIEWS_KEY = 'flashCardsReviews'
@@ -467,9 +479,8 @@ const selectSet = (id) => {
 const startSession = (selectedMode) => {
   if (selectedCards.value.length === 0) return
   if (selectedMode === 'quiz') {
-    const session = loadQuizSession()
+    const session = loadQuizSession(selectedSetId.value)
     if (session
-        && session.datasetId === selectedSetId.value
         && Array.isArray(session.deck) && session.deck.length > 0
         && Array.isArray(session.ratedEntries) && session.ratedEntries.length < session.deck.length) {
       resumeSession.value = session
