@@ -49,9 +49,10 @@
       </div>
     </div>
 
-    <p v-if="sets.length === 0" class="empty-state">
-      Aucun jeu de données. Créez-en un ci-dessus.
-    </p>
+    <div v-if="sets.length === 0" class="empty-state">
+      <p>Aucun jeu de données. Créez-en un ci-dessus.</p>
+      <button class="btn btn-primary mt-3" @click="loadDemoData">Charger les données démo</button>
+    </div>
 
     <div v-else class="flex flex-col gap-3">
       <div
@@ -119,6 +120,7 @@
 import { computed, ref } from 'vue'
 import InsertData from './InsertData.vue'
 import { normalizeBackup, makeId } from '../utils/cards'
+import { demoDatasets } from '../utils/demoData'
 import { useToast } from '../composables/useToast'
 import imgEdit from '../assets/edit.svg'
 import imgTrash from '../assets/trash.svg'
@@ -165,6 +167,12 @@ const sortTitle = computed(() => `Tri : ${sortLabel.value} (cliquer pour changer
 const cycleSort = () => {
   const order = ['az', 'desc', 'none']
   sortMode.value = order[(order.indexOf(sortMode.value) + 1) % order.length]
+}
+
+const loadDemoData = () => {
+  if (sets.value.length > 0) return
+  sets.value = demoDatasets()
+  toast('Données démo chargées', 'success')
 }
 
 const createSet = () => {

@@ -53,7 +53,8 @@
       </div>
 
       <div v-if="datasets.length === 0" class="callout">
-        Aucun jeu de données pour le moment. Créez-en un dans « Données » pour pouvoir mémoriser.
+        <p>Aucun jeu de données pour le moment.</p>
+        <button class="btn btn-primary mt-3" @click="loadDemoData">Charger les données démo</button>
       </div>
 
       <button v-if="installAvailable" class="btn btn-outline mx-auto mt-8 flex" @click="installApp">
@@ -83,6 +84,8 @@ import { ref, onMounted, watch } from 'vue'
 import Memrise from './components/Memrise.vue'
 import DataSets from './components/DataSets.vue'
 import ToastHost from './components/ToastHost.vue'
+import { demoDatasets } from './utils/demoData'
+import { useToast } from './composables/useToast'
 
 const STORAGE_KEY = 'flashCardDatasets'
 const THEME_KEY = 'flashCardsTheme'
@@ -150,6 +153,14 @@ onMounted(() => {
     installAvailable.value = false
   })
 })
+
+const { toast } = useToast()
+
+const loadDemoData = () => {
+  if (datasets.value.length > 0) return
+  datasets.value = demoDatasets()
+  toast('Données démo chargées', 'success')
+}
 
 /**
  * Sauvegarder les jeux de données dans localStorage dès qu'ils changent
